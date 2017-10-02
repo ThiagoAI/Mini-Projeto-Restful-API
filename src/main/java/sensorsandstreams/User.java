@@ -15,6 +15,7 @@ public class User {
 	//Sensores deste usuário
 	List<ObjectId> sensors;
 	
+	//Builder
 	public User(String username,String email){
 		this.username = username;
 		this.email = email;
@@ -22,7 +23,6 @@ public class User {
 	}
 	
 	//getters and setters
-	
 	public String getUsername() {
 		return username;
 	}

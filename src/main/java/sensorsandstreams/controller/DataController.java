@@ -20,10 +20,19 @@ public class DataController {
 	
 		//Post para publicar informação do sensor
 		post("/data", (req,res) -> {
+			
+			//Convertemos os parâmetros passados e chamamos o serviço
+			//Em caso de problema com JSON ou com query parameters, imprimimos um erro
 			Gson g = new Gson();
-			Data temp = g.fromJson(req.body(), Data.class);
+			Data temp; 
+			try {
+			temp = g.fromJson(req.body(), Data.class);
 			return dataService.publishData(temp.getTimestamp(),
 					temp.getValue(),req.queryParams("key"));
+			}
+			catch(Exception e) {
+			return new String("{\"status\":\"Operação não foi realizada com sucesso. Problema com parâmetros passados.\"}");
+			}
 		});
 	}
 }

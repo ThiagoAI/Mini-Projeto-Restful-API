@@ -20,11 +20,18 @@ public class SensorController {
 		
 		//Post para registrar um sensor
 		post("/sensors", (req,res)->{
+			//Passamos de JSON para Sensor
+			//Em caso de problemas com esta transformação, imprimimos um erro
 			Gson g = new Gson();
+			try {
 			Sensor temp = g.fromJson(req.body(), Sensor.class);
-			//owner fixo Thiago para testes
+			//owner fixo Thiago já que não temos cadastro de usuário
 			return sensorService.registerSensor(temp.getLabel(),
 				temp.getDescription(),"Thiago");
+			}
+			catch(Exception e) {
+				return new String("{\"status\":\"Operação não foi realizada com sucesso. Problema com parâmetros passados.\"}");
+			}
 		});
 		
 		//Get para pegar um sensor específico (passada a chave)
@@ -37,7 +44,5 @@ public class SensorController {
 			return sensorService.getUserSensors(req.params(":username"));
 		});
 		
-		
-
 	}
 }

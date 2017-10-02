@@ -52,13 +52,9 @@ public class SensorService {
 			formatted.put("description", newobj.get("description"));
 			
 			return JsonUtil.toJson(formatted);
-			//sensor.setOid(cursor.next().get("_id").toString());
-			//System.out.println(sensor.getOid());
-			//cursor.close();
 		}
 		catch(Exception e){
 			e.printStackTrace();
-			System.exit(1);
 		}
 	
 		return new String("{\"status\":\"Operação não foi realizada com sucesso.\"}");
@@ -83,8 +79,11 @@ public class SensorService {
 			
 			//Percorremos todos os sensores encontrados e adicionamos eles a sensors
 			List<BasicDBObject> sensors = new ArrayList<BasicDBObject>();
+			
 			//Precisamos da collection streams para inserir em formatted
 			DBCollection streams = db.getCollection("streams");
+			
+			//While pegando os sensors
 			while(cursor.hasNext()) {
 				BasicDBObject tempSensor = (BasicDBObject) cursor.next();
 				BasicDBObject formatted = new BasicDBObject();
@@ -94,10 +93,10 @@ public class SensorService {
 				formatted.put("label", tempSensor.get("label"));
 				formatted.put("description", tempSensor.get("description"));
 			
-				//Agora, pegamos as streams
+				//Agora pegamos as streams
 				BasicDBList list = (BasicDBList) tempSensor.get("streams");
 				
-				//Se tiver streams, precisam ser adicionadas
+				//Se o sensor tiver streams, colocamos elas
 				if(list != null) {
 					List<BasicDBObject> formattedStreams = new ArrayList<BasicDBObject>();
 					
@@ -179,6 +178,7 @@ public class SensorService {
 			//Inserimos a lista da streams na resposta
 			response.put("streams", formattedStreams);
 		}
+		//Se não houverem streams, colocamos uma lista vazia
 		else response.put("streams", new ArrayList<BasicDBObject>());
 				
 		cursor.close();

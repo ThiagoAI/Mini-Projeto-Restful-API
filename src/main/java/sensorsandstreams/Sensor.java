@@ -28,8 +28,6 @@ public class Sensor {
 		this.owner = owner;
 		this.key = UUID.randomUUID().toString();
 		this.streams = null;
-		//this.oid = null;
-		//streams = new ArrayList<String>();
 	}
 	
 	//getters e setters

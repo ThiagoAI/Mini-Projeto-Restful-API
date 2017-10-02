@@ -8,7 +8,7 @@ public class Data {
 	//Chave da stream desta data
 	transient String stream;
 	
-	//builder
+	//Builder
 	public Data(long timestamp, Double value,String stream) {
 		this.timestamp = timestamp;
 		this.value = value;

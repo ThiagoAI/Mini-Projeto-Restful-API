@@ -22,7 +22,7 @@ public class Stream {
 	//Datas publicadas nesta stream
 	List<ObjectId> data;
 	
-	//builder
+	//Builder
 	public Stream(String label,String unit,String sensor){
 		this.label = label;
 		this.unit = unit;

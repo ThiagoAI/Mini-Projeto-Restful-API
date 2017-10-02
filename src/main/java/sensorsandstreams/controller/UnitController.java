@@ -13,6 +13,7 @@ public class UnitController {
 
 	public UnitController(final UnitService unitService){
 	
+		//Get para pegar todas as unidades
 		get("/units", (req,res) -> {
 			return unitService.getUnits();
 		});

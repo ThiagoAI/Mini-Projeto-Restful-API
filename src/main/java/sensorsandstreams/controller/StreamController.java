@@ -16,10 +16,17 @@ public class StreamController {
 		
 		//Post para registrar uma stream 
 		post("/streams", (req,res) -> {
+			//Passamos de JSON para Stream
+			//Em caso de problemas com esta transformação, imprimimos um erro
 			Gson g = new Gson();
+			try {
 			Stream temp = g.fromJson(req.body(), Stream.class);
 			return streamService.registerStream(temp.getLabel(),
-					temp.getUnit(),req.queryParams("key"));			
+					temp.getUnit(),req.queryParams("key"));	
+			}
+			catch(Exception e) {
+				return new String("{\"status\":\"Operação não foi realizada com sucesso. Problema com parâmetros passados.\"}");
+			}
 		});
 		
 		//Get para pegar informações de uma stream específica

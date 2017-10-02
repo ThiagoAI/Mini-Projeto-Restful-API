@@ -23,7 +23,7 @@ import jsontransformer.JsonUtil;
 public class StreamService {
 	
 	//Registra no banco de dados uma stream para um sensor (key)
-	/*Recebe label e unit da stream e key do sensor, retorna o json response*/
+	/*Recebe label e unit da stream e key do sensor, retorna o json formatted*/
 	public String registerStream(String label,String unit,String sensor) {
 		Stream stream = new Stream(label,unit,sensor);
 		try {
@@ -50,13 +50,14 @@ public class StreamService {
 			query.remove("key");
 			ObjectId newid;
 			
-			//Chave do banco pode ser inválida...
+			//Chave do banco pode ser inválida, se for retornamos um erro
 			try {
 				newid = new ObjectId(unit);
 			}
 			catch(Exception e) {
 				return new String("{\"status\":\"Operação não foi realizada com sucesso. Chave de unidade inválida.\"}");
 			}
+			
 			query.put("_id", newid);
 			cursor = units.find(query);
 			if(!cursor.hasNext()) return new String("{\"status\":\"Operação não foi realizada com sucesso. Unidade não existe.\"}");
@@ -113,14 +114,13 @@ public class StreamService {
 		}
 		catch(Exception e){
 			e.printStackTrace();
-			System.exit(1);
 		}
 		
 		return new String("{\"status\":\"Operação não foi realizada com sucesso.\"}");
 	}
 	
 	//Pega os dados de uma stream específica
-	/*Recebe chave da stream, retorna a stream com seus dados*/
+	/*Recebe chave da stream, retorna a stream com seus dados como json*/
 	public String getSpecificStream(String key) {
 		
 		try {
@@ -142,18 +142,18 @@ public class StreamService {
 			
 			//Pegamos a stream, começamos a construir a resposta
 			BasicDBObject s = (BasicDBObject) cursor.next();
-			BasicDBObject response = new BasicDBObject();
+			BasicDBObject formatted = new BasicDBObject();
 			
 			//Já que o sensor existe, criamos e inserimos a stream
 			BasicDBObject newobj = new BasicDBObject();
 			
 			//Criamos a stream e a registramos no banco de dados
-			response.put("oid",s.get("_id").toString());
-			response.put("key",s.get("key"));
-			response.put("label",s.get("label"));
-			response.put("unit",s.get("unit"));
-			response.put("sensor",s.get("sensor"));
-			response.put("totalSize",s.get("totalSize"));
+			formatted.put("oid",s.get("_id").toString());
+			formatted.put("key",s.get("key"));
+			formatted.put("label",s.get("label"));
+			formatted.put("unit",s.get("unit"));
+			formatted.put("sensor",s.get("sensor"));
+			formatted.put("totalSize",s.get("totalSize"));
 
 			//Para inserir as datas, temos de iterar pelos ids
 			BasicDBList list = (BasicDBList) s.get("data");
@@ -169,19 +169,19 @@ public class StreamService {
 					formattedData.add(newData);
 				}
 				//Inserimos a lista completa
-				response.put("data", formattedData);
+				formatted.put("data", formattedData);
 			}
 			else {
 				//Se estiver vazio colocamos uma lista vazia
-				response.put("data", new ArrayList<BasicDBObject>());
+				formatted.put("data", new ArrayList<BasicDBObject>());
 			}
 			cursor.close();
 			
-			return JsonUtil.toJson(response);
+			return JsonUtil.toJson(formatted);
 		}
 		catch(Exception e){
 			e.printStackTrace();
-			System.exit(1);
+		
 		}
 		
 		return new String("{\"status\":\"Operação não foi realizada com sucesso.\"}");
@@ -194,9 +194,8 @@ public class StreamService {
 			//Abrindo mongo
 			MongoClient mongo = new MongoClient("0.0.0.0",27017);
 			DB db = mongo.getDB("mini-projeto");
-			DBCollection table = db.getCollection("streams");
 			
-			//Verificamos primeiro se o sensor existe
+			//Verificamos primeiro se a stream existe
 			BasicDBObject query = new BasicDBObject().append("_id",oid);
 			DBCollection streams = db.getCollection("streams");
 			DBCursor cursor = streams.find(query);
@@ -209,18 +208,18 @@ public class StreamService {
 			
 			//Pegamos a stream, começamos a construir a resposta
 			BasicDBObject s = (BasicDBObject) cursor.next();
-			BasicDBObject response = new BasicDBObject();
+			BasicDBObject formatted = new BasicDBObject();
 			
-			//Já que o sensor existe, criamos e inserimos a stream
+			//Já que a stream existe, criamos e inserimos a stream
 			BasicDBObject newobj = new BasicDBObject();
 			
 			//Criamos a stream e a registramos no banco de dados
-			response.put("oid",s.get("_id").toString());
-			response.put("key",s.get("key"));
-			response.put("label",s.get("label"));
-			response.put("unit",s.get("unit"));
-			response.put("sensor",s.get("sensor"));
-			response.put("totalSize",s.get("totalSize"));
+			formatted.put("oid",s.get("_id").toString());
+			formatted.put("key",s.get("key"));
+			formatted.put("label",s.get("label"));
+			formatted.put("unit",s.get("unit"));
+			formatted.put("sensor",s.get("sensor"));
+			formatted.put("totalSize",s.get("totalSize"));
 
 			//Para inserir as datas, temos de iterar pelos ids
 			BasicDBList list = (BasicDBList) s.get("data");
@@ -255,25 +254,22 @@ public class StreamService {
 				for(int i=0;i<limit;i++) formattedData.add(sortedData.get(i));
 				
 				//Inserimos a lista completa
-				response.put("data", formattedData);
+				formatted.put("data", formattedData);
 			}
 			else {
 				//Se a lista é nula, colocamos ela vazia
-				response.put("data", new ArrayList<BasicDBObject>());
+				formatted.put("data", new ArrayList<BasicDBObject>());
 			}
-			
 			
 			cursor.close();
 			
-			return response;
+			return formatted;
 		}
 		catch(Exception e){
 			e.printStackTrace();
-			System.exit(1);
 		}
 
 		return null;
-	//Função auxiliar que envia em BasicDBObject uma stream 
 	}
 }
 

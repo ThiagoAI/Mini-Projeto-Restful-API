@@ -39,6 +39,7 @@ public class DataService {
 				cursor.close();
 				return new String("{\"status\":\"Operação não foi realizada com sucesso. Stream não está registrada.\"}");
 			}
+			//s guarda a stream da data
 			BasicDBObject s = (BasicDBObject) cursor.next();
 			
 			//Já que o sensor existe, criamos e inserimos a stream
@@ -51,7 +52,7 @@ public class DataService {
 			String oid = newobj.get("_id").toString();
 			
 			//Pegamos a data inserida para atualizar a lista com o oid
-			//assim como enviar uma resposta formata posteriormente
+			//assim como enviar uma resposta formatada posteriormente
 			query = new BasicDBObject();
 			query.put("_id", oid);
 		
@@ -80,6 +81,7 @@ public class DataService {
 			//Criamos a resposta formatada usando a stream do banco
 			BasicDBObject formatted = new BasicDBObject();
 			
+			//Colocamos os valores na resposta formatada
 			formatted.put("oid", oid);
 			formatted.put("timestamp",d.getTimestamp());
 			formatted.put("value",d.getValue());
@@ -90,7 +92,6 @@ public class DataService {
 		}
 		catch(Exception e){
 			e.printStackTrace();
-			System.exit(1);
 		}
 		
 		return new String("{\"status\":\"Operação não foi realizada com sucesso.\"}");
@@ -122,12 +123,14 @@ public class DataService {
 		BasicDBObject data = (BasicDBObject) cursor.next();
 		response.put("timestamp", data.get("timestamp"));
 		response.put("data", data.get("value"));
+		
+		return response;
 		}
 		catch(Exception e) {
 			e.printStackTrace();
+			return null;
 		}
 		
-		return response;
 	}
 	
 }

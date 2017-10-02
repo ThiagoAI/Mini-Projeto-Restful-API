@@ -41,7 +41,6 @@ public class UnitService {
 		}
 		catch(Exception e){
 			e.printStackTrace();
-			System.exit(1);
 		}
 		
 		return new String("{\"status\":\"Operação não foi realizada com sucesso.\"}");
