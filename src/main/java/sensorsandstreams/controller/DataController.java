@@ -5,6 +5,8 @@ import static jsontransformer.JsonUtil.*;
 
 import java.util.List;
 
+import org.eclipse.jetty.server.Response;
+
 import com.google.gson.Gson;
 
 import sensorsandstreams.Data;
@@ -20,7 +22,7 @@ public class DataController {
 	
 		//Post para publicar informação do sensor
 		post("/data", (req,res) -> {
-			
+			res.type("application/json");
 			//Convertemos os parâmetros passados e chamamos o serviço
 			//Em caso de problema com JSON ou com query parameters, imprimimos um erro
 			Gson g = new Gson();

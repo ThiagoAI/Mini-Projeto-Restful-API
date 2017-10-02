@@ -13,6 +13,7 @@ public class UserController {
 	
 		//Post de registro de usuário
 		post("/users", (req,res)->{
+			res.type("application/json");
 			//Tentamos converter de Json para User
 			//Em caso de problema, imprimimos menssagem de erro
 			Gson g = new Gson();

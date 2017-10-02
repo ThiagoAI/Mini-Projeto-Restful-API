@@ -15,6 +15,7 @@ public class UnitController {
 	
 		//Get para pegar todas as unidades
 		get("/units", (req,res) -> {
+			res.type("application/json");
 			return unitService.getUnits();
 		});
 	}

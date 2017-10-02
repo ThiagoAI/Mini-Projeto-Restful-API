@@ -20,6 +20,7 @@ public class SensorController {
 		
 		//Post para registrar um sensor
 		post("/sensors", (req,res)->{
+			res.type("application/json");
 			//Passamos de JSON para Sensor
 			//Em caso de problemas com esta transformação, imprimimos um erro
 			Gson g = new Gson();
@@ -36,11 +37,13 @@ public class SensorController {
 		
 		//Get para pegar um sensor específico (passada a chave)
 		get("/sensors", (req,res) ->{
+			res.type("application/json");
 			return sensorService.getSpecificSensor(req.queryParams("key"));
 		});
 		
 		//Get para pegar sensores específicos de um usuário
 		get("/sensors/:username", (req,res )->{
+			res.type("application/json");
 			return sensorService.getUserSensors(req.params(":username"));
 		});
 		

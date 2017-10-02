@@ -16,6 +16,7 @@ public class StreamController {
 		
 		//Post para registrar uma stream 
 		post("/streams", (req,res) -> {
+			res.type("application/json");
 			//Passamos de JSON para Stream
 			//Em caso de problemas com esta transformação, imprimimos um erro
 			Gson g = new Gson();
@@ -31,6 +32,7 @@ public class StreamController {
 		
 		//Get para pegar informações de uma stream específica
 		get("/streams", (req,res) -> {
+			res.type("application/json");
 			return streamService.getSpecificStream(req.queryParams("key"));
 		});
 		
