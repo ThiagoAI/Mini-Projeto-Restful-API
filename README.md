@@ -14,7 +14,7 @@ Este projeto é um projeto Maven, após a importação do repositório deixe o M
 Funções  
 ---
 
-Todas as respostas são em formato JSON. A data enviada por POST requests também deve estar em formato JSON.
+Todas as respostas são em formato JSON. A data enviada por POST requests também deve estar em formato JSON. Se ocorrer algum erro na chamada de qualquer função, um JSON com apenas um atributo, "status", será enviado informando sobre o problema.
 
 
 ### Consultar unidades de grandeza
