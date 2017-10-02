@@ -43,18 +43,13 @@ public class SensorService {
 			
 			//Formatamos a resposta, que será formated em formato json
 			BasicDBObject query = new BasicDBObject();
-			query.put("key", sensor.getKey());
-			DBCursor cursor = table.find(query);
-			BasicDBObject obj = (BasicDBObject)cursor.next();
 			BasicDBObject formatted = new BasicDBObject();
 
 			//Formatando resposta
-			formatted.put("oid",obj.get("_id").toString());
-			formatted.put("key", obj.get("key"));
-			formatted.put("label", obj.get("label"));
-			formatted.put("description", obj.get("description"));
-			
-			cursor.close();
+			formatted.put("oid",newobj.get("_id").toString());
+			formatted.put("key", newobj.get("key"));
+			formatted.put("label", newobj.get("label"));
+			formatted.put("description", newobj.get("description"));
 			
 			return JsonUtil.toJson(formatted);
 			//sensor.setOid(cursor.next().get("_id").toString());
@@ -78,6 +73,7 @@ public class SensorService {
 			DB db = mongo.getDB("mini-projeto");
 			DBCollection table = db.getCollection("sensors");
 			
+			//Percorremos todos os sensores em busca dos sensores do usuário
 			BasicDBObject query = new BasicDBObject();
 			query.put("owner",user);
 			DBCursor cursor = table.find(query);

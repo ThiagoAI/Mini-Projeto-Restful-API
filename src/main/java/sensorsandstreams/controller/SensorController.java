@@ -25,15 +25,6 @@ public class SensorController {
 			//owner fixo Thiago para testes
 			return sensorService.registerSensor(temp.getLabel(),
 				temp.getDescription(),"Thiago");
-	
-			//Para editar a stream que está vazia fora do json
-			/*Map<String,Object> map = new Gson().fromJson(response, Map.class);
-			System.out.println(map);
-			for(Map.Entry<String, Object> entry : map.entrySet()) {
-				if(entry.getValue() == null) map.remove(entry.getKey());
-			}
-			response = new Gson().toJson(map);
-			*/
 		});
 		
 		//Get para pegar um sensor específico (passada a chave)

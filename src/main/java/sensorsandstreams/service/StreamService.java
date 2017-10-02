@@ -41,11 +41,27 @@ public class StreamService {
 			//Se sensor não existir, irá retornar um erro
 			if(!cursor.hasNext()) {
 				cursor.close();
-				return new String("{\"status\":\"Operação não foi realizada com sucesso.\"}");
+				return new String("{\"status\":\"Operação não foi realizada com sucesso. Sensor não existe.\"}");
 			}
 			BasicDBObject s = (BasicDBObject) cursor.next();
 			
-			//Já que o sensor existe, criamos e inserimos a stream
+			//Verificamose se a unidade referida também existe
+			DBCollection units = db.getCollection("units");
+			query.remove("key");
+			ObjectId newid;
+			
+			//Chave do banco pode ser inválida...
+			try {
+				newid = new ObjectId(unit);
+			}
+			catch(Exception e) {
+				return new String("{\"status\":\"Operação não foi realizada com sucesso. Chave de unidade inválida.\"}");
+			}
+			query.put("_id", newid);
+			cursor = units.find(query);
+			if(!cursor.hasNext()) return new String("{\"status\":\"Operação não foi realizada com sucesso. Unidade não existe.\"}");
+			
+			//Já que o sensor e a unit existem, criamos e inserimos a stream
 			BasicDBObject newobj = new BasicDBObject();
 			
 			//Criamos a stream e registramos no banco de dados
