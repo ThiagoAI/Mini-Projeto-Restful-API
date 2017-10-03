@@ -42,7 +42,6 @@ public class SensorService {
 			table.insert(newobj);
 			
 			//Formatamos a resposta, que será formated em formato json
-			BasicDBObject query = new BasicDBObject();
 			BasicDBObject formatted = new BasicDBObject();
 
 			//Formatando resposta

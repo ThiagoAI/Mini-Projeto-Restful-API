@@ -24,6 +24,7 @@ public class SensorController {
 			//Passamos de JSON para Sensor
 			//Em caso de problemas com esta transformação, imprimimos um erro
 			Gson g = new Gson();
+			
 			try {
 			Sensor temp = g.fromJson(req.body(), Sensor.class);
 			//owner fixo Thiago já que não temos cadastro de usuário
