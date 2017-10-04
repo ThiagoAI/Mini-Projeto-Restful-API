@@ -1,6 +1,7 @@
 package sensorsandstreams.service;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.bson.types.ObjectId;
@@ -9,7 +10,9 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+
 import org.bson.types.ObjectId;
 
 import jsontransformer.JsonUtil;
@@ -99,36 +102,50 @@ public class DataService {
 	
 	//Função auxiliar, envia BasicDBObject da data pedida
 	/*Recebe o id da data, retorna ela como objeto do banco formatada*/
-	public BasicDBObject getData(ObjectId oid) {
-		BasicDBObject response = new BasicDBObject();
+	public static List<BasicDBObject> getData(List<ObjectId> oids,MongoClient mongo) {
 		try {
-		//Abrindo mongo
-		MongoClient mongo = new MongoClient("0.0.0.0",27017);
+		//Pegando a collection
 		DB db = mongo.getDB("mini-projeto");
 		DBCollection table = db.getCollection("data");
 		
-		BasicDBObject query = new BasicDBObject();
-		query.put("_id", oid);
-		
-		DBCursor cursor = table.find(query);
-		
-		//Se a data não existir
-		if(!cursor.hasNext()){
-			System.out.println("nooo");
-			cursor.close();
-			return null;
+		//Criamos uma lista de ObjectIds para a query
+		List<BasicDBObject> ids = new ArrayList<BasicDBObject>();
+		Iterator<ObjectId> it = oids.iterator();
+		while(it.hasNext()) {
+			ids.add(new BasicDBObject().append("_id", it.next()));
 		}
 		
-		//Formatamos a resposta
-		BasicDBObject data = (BasicDBObject) cursor.next();
-		response.put("timestamp", data.get("timestamp"));
-		response.put("data", data.get("value"));
+		//Executamos a query obtendo todas as datas
+		BasicDBObject inQuery = new BasicDBObject();
+		inQuery.put("$in", oids);
+		
+		BasicDBObject query = new BasicDBObject();
+		query.put("_id", inQuery);
+		DBCursor cursor = table.find(query);
+		
+		List<BasicDBObject> response = new ArrayList<BasicDBObject>();
+
+		//Se estiver vazio retornamos nulo
+		if(!cursor.hasNext()){
+			System.out.println("no");
+			return new ArrayList<>();
+		}
+		
+		//Colocamos na lista removendos os ids
+		int i = 0;
+		while(cursor.hasNext()) {
+			response.add((BasicDBObject)cursor.next());
+			response.get(i).removeField("_id");
+			i++;
+		}
+		
+		cursor.close();
 		
 		return response;
 		}
 		catch(Exception e) {
 			e.printStackTrace();
-			return null;
+			return new ArrayList<>();
 		}
 		
 	}

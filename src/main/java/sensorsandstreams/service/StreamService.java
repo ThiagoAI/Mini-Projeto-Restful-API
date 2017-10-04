@@ -144,10 +144,7 @@ public class StreamService {
 			BasicDBObject s = (BasicDBObject) cursor.next();
 			BasicDBObject formatted = new BasicDBObject();
 			
-			//Já que o sensor existe, criamos e inserimos a stream
-			BasicDBObject newobj = new BasicDBObject();
-			
-			//Criamos a stream e a registramos no banco de dados
+			//Inserimos os valores na resposta
 			formatted.put("oid",s.get("_id").toString());
 			formatted.put("key",s.get("key"));
 			formatted.put("label",s.get("label"));
@@ -155,26 +152,15 @@ public class StreamService {
 			formatted.put("sensor",s.get("sensor"));
 			formatted.put("totalSize",s.get("totalSize"));
 
-			//Para inserir as datas, temos de iterar pelos ids
-			BasicDBList list = (BasicDBList) s.get("data");
-			List<BasicDBObject> formattedData = new ArrayList<BasicDBObject>();
+			//Para inserir as datas, transformamos em uma lista de ids
+			BasicDBList listBson = (BasicDBList) s.get("data");
+			List<ObjectId> list = new ArrayList<ObjectId>();
+			for(Object id: listBson) list.add((ObjectId)id);
 			
-			//Se tiver data, entra no if e itera pela lista de data
-			if(list != null) {
-				Iterator it = list.iterator();
-				DataService ds = new DataService();
-				while(it.hasNext()) {
-					ObjectId temp = (ObjectId) it.next();
-					BasicDBObject newData = ds.getData(temp);
-					formattedData.add(newData);
-				}
-				//Inserimos a lista completa
-				formatted.put("data", formattedData);
-			}
-			else {
-				//Se estiver vazio colocamos uma lista vazia
-				formatted.put("data", new ArrayList<BasicDBObject>());
-			}
+			//Chamamos função auxiliar para pegar lista de datas
+			List<BasicDBObject> formattedData = DataService.getData(list,mongo);
+			formatted.append("data", formattedData);
+			
 			cursor.close();
 			
 			return JsonUtil.toJson(formatted);
@@ -210,10 +196,9 @@ public class StreamService {
 			BasicDBObject s = (BasicDBObject) cursor.next();
 			BasicDBObject formatted = new BasicDBObject();
 			
-			//Já que a stream existe, criamos e inserimos a stream
 			BasicDBObject newobj = new BasicDBObject();
 			
-			//Criamos a stream e a registramos no banco de dados
+			//Inserimos os valores na resposta
 			formatted.put("oid",s.get("_id").toString());
 			formatted.put("key",s.get("key"));
 			formatted.put("label",s.get("label"));
@@ -221,45 +206,39 @@ public class StreamService {
 			formatted.put("sensor",s.get("sensor"));
 			formatted.put("totalSize",s.get("totalSize"));
 
-			//Para inserir as datas, temos de iterar pelos ids
-			BasicDBList list = (BasicDBList) s.get("data");
+			BasicDBList listBson = (BasicDBList) s.get("data");
+		
+			//Se não tem data, já podemos retornar
+			if(listBson == null) {
+				formatted.put("data",new ArrayList<ObjectId>());
+				return formatted;
+			}
+			
+			//Para inserir as datas temos de transformar em uma lista de ids
+			List<ObjectId> list = new ArrayList<ObjectId>();
+			for(Object id: listBson) list.add((ObjectId)id);
+			
+			List<BasicDBObject> sortedData = DataService.getData(list,mongo);
+		
+			//Damos sort na sortedData
+			Collections.sort(sortedData, (o1,o2) ->{
+				long l1 = ((BasicDBObject) o1).getLong("timestamp");
+				long l2 = ((BasicDBObject) o2).getLong("timestamp");
+				
+				if(l1 > l2) return -1;
+				if(l2 < l1) return 1;
+				return 0;
+			});
+			
 			List<BasicDBObject> formattedData = new ArrayList<BasicDBObject>();
 			
-			//Se houver data na stream...
-			if(list != null) {
-				Iterator it = list.iterator();
-				DataService ds = new DataService();
-				//Limite de 5 datas mais recentes, vamos ordernar outra lista
-				List<BasicDBObject> sortedData = new ArrayList<BasicDBObject>();
-				
-				while(it.hasNext()) {
-					ObjectId temp = (ObjectId) it.next();
-					BasicDBObject newData = ds.getData(temp);
-					sortedData.add(newData);
-				}
-				
-				//Damos sort na sortedData
-				Collections.sort(sortedData, (o1,o2) ->{
-					long l1 = ((BasicDBObject) o1).getLong("timestamp");
-					long l2 = ((BasicDBObject) o2).getLong("timestamp");
-					
-					if(l1 > l2) return -1;
-					if(l2 < l1) return 1;
-					return 0;
-				});
-				
-				//Passamos as 5 mais recentes. Se tiver menos de 5, esse é o limite.
-				int limit = sortedData.size()< 5?sortedData.size():5; 
-				
-				for(int i=0;i<limit;i++) formattedData.add(sortedData.get(i));
-				
-				//Inserimos a lista completa
-				formatted.put("data", formattedData);
-			}
-			else {
-				//Se a lista é nula, colocamos ela vazia
-				formatted.put("data", new ArrayList<BasicDBObject>());
-			}
+			//Passamos as 5 mais recentes. Se tiver menos de 5, esse é o limite.
+			int limit = sortedData.size()< 5?sortedData.size():5; 
+			
+			for(int i=0;i<limit;i++) formattedData.add(sortedData.get(i));
+			
+			//Inserimos a lista completa
+			formatted.put("data", formattedData);
 			
 			cursor.close();
 			
