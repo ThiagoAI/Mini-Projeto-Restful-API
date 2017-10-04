@@ -154,12 +154,16 @@ public class StreamService {
 
 			//Para inserir as datas, transformamos em uma lista de ids
 			BasicDBList listBson = (BasicDBList) s.get("data");
-			List<ObjectId> list = new ArrayList<ObjectId>();
-			for(Object id: listBson) list.add((ObjectId)id);
 			
-			//Chamamos função auxiliar para pegar lista de datas
-			List<BasicDBObject> formattedData = DataService.getData(list,mongo);
-			formatted.append("data", formattedData);
+			
+			if(listBson != null) {
+				List<ObjectId> list = new ArrayList<ObjectId>();
+				for(Object id: listBson) list.add((ObjectId)id);
+				//Chamamos função auxiliar para pegar lista de datas
+				List<BasicDBObject> formattedData = DataService.getData(list,mongo);
+				formatted.append("data", formattedData);
+			}
+			else formatted.append("data", new ArrayList<>());
 			
 			cursor.close();
 			
@@ -173,76 +177,76 @@ public class StreamService {
 		return new String("{\"status\":\"Operação não foi realizada com sucesso.\"}");
 	}
 	
-	//Função auxiliar, envia BasicDBObject da stream pedida
-	/*Recebe id da stream, retorna BasicDBObject da stream pedida*/
-	public BasicDBObject getStream(ObjectId oid){
+	//Função auxiliar, envia BasicDBObject da stream pedida e retorna 5 datas mais recentes
+	/*Recebe id da stream e a conexão mongo, retorna BasicDBObject da stream pedida*/
+	public static List<BasicDBObject> getStream(List<ObjectId> oids,MongoClient mongo){
 		try {
-			//Abrindo mongo
-			MongoClient mongo = new MongoClient("0.0.0.0",27017);
 			DB db = mongo.getDB("mini-projeto");
 			
-			//Verificamos primeiro se a stream existe
-			BasicDBObject query = new BasicDBObject().append("_id",oid);
+			//Pegamos a lista de streams
+			BasicDBObject inQuery = new BasicDBObject();
+			inQuery.put("$in", oids);
+			
+			BasicDBObject query = new BasicDBObject().append("_id",inQuery);
 			DBCollection streams = db.getCollection("streams");
 			DBCursor cursor = streams.find(query);
 			
-			//Se stream não existir, irá retornar um erro
-			if(!cursor.hasNext()) {
-				cursor.close();
-				return null;
-			}
+			//Criamos a lista de streams resposta e inserimos nela
+			List<BasicDBObject> response = new ArrayList<BasicDBObject>();
 			
-			//Pegamos a stream, começamos a construir a resposta
-			BasicDBObject s = (BasicDBObject) cursor.next();
-			BasicDBObject formatted = new BasicDBObject();
-			
-			BasicDBObject newobj = new BasicDBObject();
-			
-			//Inserimos os valores na resposta
-			formatted.put("oid",s.get("_id").toString());
-			formatted.put("key",s.get("key"));
-			formatted.put("label",s.get("label"));
-			formatted.put("unit",s.get("unit"));
-			formatted.put("sensor",s.get("sensor"));
-			formatted.put("totalSize",s.get("totalSize"));
-
-			BasicDBList listBson = (BasicDBList) s.get("data");
-		
-			//Se não tem data, já podemos retornar
-			if(listBson == null) {
-				formatted.put("data",new ArrayList<ObjectId>());
-				return formatted;
-			}
-			
-			//Para inserir as datas temos de transformar em uma lista de ids
-			List<ObjectId> list = new ArrayList<ObjectId>();
-			for(Object id: listBson) list.add((ObjectId)id);
-			
-			List<BasicDBObject> sortedData = DataService.getData(list,mongo);
-		
-			//Damos sort na sortedData
-			Collections.sort(sortedData, (o1,o2) ->{
-				long l1 = ((BasicDBObject) o1).getLong("timestamp");
-				long l2 = ((BasicDBObject) o2).getLong("timestamp");
+			while(cursor.hasNext()) {
+				//Pegamos a stream, começamos a construir a resposta
+				BasicDBObject s = (BasicDBObject) cursor.next();
+				BasicDBObject formatted = new BasicDBObject();
 				
-				if(l1 > l2) return -1;
-				if(l2 < l1) return 1;
-				return 0;
-			});
+				//Inserimos os valores na resposta
+				formatted.put("oid",s.get("_id").toString());
+				formatted.put("key",s.get("key"));
+				formatted.put("label",s.get("label"));
+				formatted.put("unit",s.get("unit"));
+				formatted.put("sensor",s.get("sensor"));
+				formatted.put("totalSize",s.get("totalSize"));
+				
+				BasicDBList listBson = (BasicDBList) s.get("data");
 			
-			List<BasicDBObject> formattedData = new ArrayList<BasicDBObject>();
+				//Se não tem data, inserimos data vazia e vamos para a próxima iteração 
+				if(listBson == null) {
+					formatted.put("data",new ArrayList<ObjectId>());
+					continue;
+				}
+				
+				//Para inserir as datas temos de transformar em uma lista de ids
+				List<ObjectId> list = new ArrayList<ObjectId>();
+				for(Object id: listBson) list.add((ObjectId)id);
+				
+				List<BasicDBObject> sortedData = DataService.getData(list,mongo);
 			
-			//Passamos as 5 mais recentes. Se tiver menos de 5, esse é o limite.
-			int limit = sortedData.size()< 5?sortedData.size():5; 
-			
-			for(int i=0;i<limit;i++) formattedData.add(sortedData.get(i));
-			
-			//Inserimos a lista completa
-			formatted.put("data", formattedData);
+				//Damos sort na sortedData
+				Collections.sort(sortedData, (o1,o2) ->{
+					long l1 = ((BasicDBObject) o1).getLong("timestamp");
+					long l2 = ((BasicDBObject) o2).getLong("timestamp");
+					
+					if(l1 > l2) return -1;
+					if(l2 < l1) return 1;
+					return 0;
+				});
+				
+				List<BasicDBObject> formattedData = new ArrayList<BasicDBObject>();
+				
+				//Passamos as 5 mais recentes. Se tiver menos de 5, esse é o limite.
+				int limit = sortedData.size()< 5?sortedData.size():5; 
+				
+				for(int i=0;i<limit;i++) formattedData.add(sortedData.get(i));
+				
+				//Inserimos a lista completa na stream
+				formatted.put("data", formattedData);
+				//Inserimos a stream na lista de streams
+				response.add(formatted);
+			}
 			
 			cursor.close();
 			
-			return formatted;
+			return response;
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -250,5 +254,50 @@ public class StreamService {
 
 		return null;
 	}
-}
 
+	//Função auxiliar, envia BasicDBObject da stream pedida e não retorna data junto
+	/*Recebe id da stream e a conexão mongo, retorna BasicDBObject da stream pedida*/
+	public static List<BasicDBObject> getStreamNoData(List<ObjectId> oids,MongoClient mongo){
+		try {
+			DB db = mongo.getDB("mini-projeto");
+			
+			//Pegamos a lista de streams
+			BasicDBObject inQuery = new BasicDBObject();
+			inQuery.put("$in", oids);
+			
+			BasicDBObject query = new BasicDBObject().append("_id",inQuery);
+			DBCollection streams = db.getCollection("streams");
+			DBCursor cursor = streams.find(query);
+			
+			//Criamos a lista de streams resposta e inserimos nela
+			List<BasicDBObject> response = new ArrayList<BasicDBObject>();
+			
+			while(cursor.hasNext()) {
+				//Pegamos a stream, começamos a construir a resposta
+				BasicDBObject s = (BasicDBObject) cursor.next();
+				BasicDBObject formatted = new BasicDBObject();
+				
+				//Inserimos os valores na resposta
+				formatted.put("oid",s.get("_id").toString());
+				formatted.put("key",s.get("key"));
+				formatted.put("label",s.get("label"));
+				formatted.put("unit",s.get("unit"));
+				formatted.put("sensor",s.get("sensor"));
+				formatted.put("totalSize",s.get("totalSize"));
+				
+				//Inserimos a stream na lista de streams
+				response.add(formatted);
+			}
+			
+			cursor.close();
+			
+			return response;
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+	
+		return null;
+	}
+	
+}

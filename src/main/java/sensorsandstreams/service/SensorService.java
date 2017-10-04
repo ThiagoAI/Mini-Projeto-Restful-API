@@ -93,29 +93,21 @@ public class SensorService {
 				formatted.put("description", tempSensor.get("description"));
 			
 				//Agora pegamos as streams
-				BasicDBList list = (BasicDBList) tempSensor.get("streams");
-				
-				//Se o sensor tiver streams, colocamos elas
-				if(list != null) {
-					List<BasicDBObject> formattedStreams = new ArrayList<BasicDBObject>();
+				BasicDBList listBson = (BasicDBList) tempSensor.get("streams");
+				if(listBson != null) {
+					//Para inserir as streams temos de transformar em uma lista de ids
+					List<ObjectId> list = new ArrayList<ObjectId>();
+					for(Object id: listBson) list.add((ObjectId)id);
 					
-					//Criamos as streams formatadas e adicionamos a lista para o json
-					Iterator it = list.iterator();
-					StreamService ss = new StreamService();
-					while(it.hasNext()) {
-						ObjectId temp = (ObjectId) it.next();
-						BasicDBObject newStream = ss.getStream(temp);
-						//Removemos o campo data para response dessa operação
-						newStream.remove("data");
-						formattedStreams.add(newStream);
-					}
-					
+					//Chamamos a função auxiliar
+					List<BasicDBObject> formattedStreams = StreamService.getStreamNoData(list,mongo);
 					formatted.put("streams", formattedStreams);
 				}
-				//Colocamos uma lista vazia para os sem stream
-				else formatted.put("streams", new ArrayList<BasicDBObject>());
+				else {
+					formatted.put("streams", new ArrayList<>());
+				}
 				
-				//Adicionamos na lista de sensores
+				//Colocamos o sensor na resposta
 				sensors.add(formatted);
 			}
 			
@@ -160,21 +152,15 @@ public class SensorService {
 		response.put("unit",sensor.get("description"));
 		
 		//Precisamos agora pegar todas as streams associadas para passar ao json
-		DBCollection streams = db.getCollection("streams");
-		BasicDBList list = (BasicDBList) sensor.get("streams");
-		List<BasicDBObject> formattedStreams = new ArrayList<BasicDBObject>();
+		BasicDBList listBson = (BasicDBList) sensor.get("streams");
 		
-		//Criamos as streams formatadas e adicionamos a lista para o json
-		if(list != null) {
-			Iterator it = list.iterator();
-			StreamService ss = new StreamService();
-			while(it.hasNext()) {
-				ObjectId temp = (ObjectId) it.next();
-				BasicDBObject newStream = ss.getStream(temp);
-				formattedStreams.add(newStream);
-			}
+		//Se a lista de ids não for nula...
+		if(listBson != null) {
+			List<ObjectId> list = new ArrayList<ObjectId>();
+			for(Object id: listBson) list.add((ObjectId)id);
+		
+			List<BasicDBObject> formattedStreams = StreamService.getStream(list,mongo);
 			
-			//Inserimos a lista da streams na resposta
 			response.put("streams", formattedStreams);
 		}
 		//Se não houverem streams, colocamos uma lista vazia

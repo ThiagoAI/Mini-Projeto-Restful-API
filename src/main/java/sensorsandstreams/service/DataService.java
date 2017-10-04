@@ -101,19 +101,12 @@ public class DataService {
 	}
 	
 	//Função auxiliar, envia BasicDBObject da data pedida
-	/*Recebe o id da data, retorna ela como objeto do banco formatada*/
+	/*Recebe o id da data e a conexão mongo, retorna ela como objeto do banco formatada*/
 	public static List<BasicDBObject> getData(List<ObjectId> oids,MongoClient mongo) {
 		try {
 		//Pegando a collection
 		DB db = mongo.getDB("mini-projeto");
 		DBCollection table = db.getCollection("data");
-		
-		//Criamos uma lista de ObjectIds para a query
-		List<BasicDBObject> ids = new ArrayList<BasicDBObject>();
-		Iterator<ObjectId> it = oids.iterator();
-		while(it.hasNext()) {
-			ids.add(new BasicDBObject().append("_id", it.next()));
-		}
 		
 		//Executamos a query obtendo todas as datas
 		BasicDBObject inQuery = new BasicDBObject();
@@ -127,7 +120,6 @@ public class DataService {
 
 		//Se estiver vazio retornamos nulo
 		if(!cursor.hasNext()){
-			System.out.println("no");
 			return new ArrayList<>();
 		}
 		
