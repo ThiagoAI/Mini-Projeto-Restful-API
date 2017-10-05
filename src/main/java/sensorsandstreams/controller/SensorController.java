@@ -26,12 +26,13 @@ public class SensorController {
 			Gson g = new Gson();
 			
 			try {
-			Sensor temp = g.fromJson(req.body(), Sensor.class);
-			//owner fixo Thiago já que não temos cadastro de usuário
-			return sensorService.registerSensor(temp.getLabel(),
-				temp.getDescription(),"Thiago");
+				Sensor temp = g.fromJson(req.body(), Sensor.class);
+				//owner fixo Thiago já que não temos cadastro de usuário
+				return sensorService.registerSensor(temp.getLabel(),
+					temp.getDescription(),"Thiago");
 			}
 			catch(Exception e) {
+				res.status(400);
 				return new String("{\"status\":\"Operação não foi realizada com sucesso. Problema com parâmetros passados.\"}");
 			}
 		});

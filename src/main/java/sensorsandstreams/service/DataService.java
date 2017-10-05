@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.bson.types.ObjectId;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -23,8 +25,9 @@ public class DataService {
 
 	//Função para publicar uma medição em uma stream
 	/*Recebe timestamp, valor e em qual stream deve registrar, retorna json da data*/
-	public String publishData(long timestamp,double value,String stream) {
+	public JsonObject publishData(long timestamp,double value,String stream) {
 		Data d = new Data(timestamp,value,stream);
+		JsonParser parser = new JsonParser();
 		try {
 			//Abrindo mongo
 			MongoClient mongo = new MongoClient("0.0.0.0",27017);
@@ -40,7 +43,7 @@ public class DataService {
 			//Se stream não existir, irá retornar um erro
 			if(!cursor.hasNext()) {
 				cursor.close();
-				return new String("{\"status\":\"Operação não foi realizada com sucesso. Stream não está registrada.\"}");
+				return (JsonObject) parser.parse(new String("{\"status\":\"Operação não foi realizada com sucesso. Stream não está registrada.\"}"));
 			}
 			//s guarda a stream da data
 			BasicDBObject s = (BasicDBObject) cursor.next();
@@ -81,23 +84,24 @@ public class DataService {
 			update.append("$set", newStream);
 			streams.update(query, update);
 			
+			JsonObject formatted = new JsonObject();
 			//Criamos a resposta formatada usando a stream do banco
-			BasicDBObject formatted = new BasicDBObject();
-			
+			//BasicDBObject formatted = new BasicDBObject();
+
 			//Colocamos os valores na resposta formatada
-			formatted.put("oid", oid);
-			formatted.put("timestamp",d.getTimestamp());
-			formatted.put("value",d.getValue());
+			formatted.addProperty("oid", oid);
+			formatted.addProperty("timestamp",d.getTimestamp());
+			formatted.addProperty("value",d.getValue());
 			
 			cursor.close();
 			
-			return JsonUtil.toJson(formatted);
+			return formatted;
 		}
 		catch(Exception e){
 			e.printStackTrace();
 		}
 		
-		return new String("{\"status\":\"Operação não foi realizada com sucesso.\"}");
+		return (JsonObject) parser.parse(new String("{\"status\":\"Operação não foi realizada com sucesso.\"}"));
 	}
 	
 	//Função auxiliar, envia BasicDBObject da data pedida

@@ -21,11 +21,12 @@ public class StreamController {
 			//Em caso de problemas com esta transformação, imprimimos um erro
 			Gson g = new Gson();
 			try {
-			Stream temp = g.fromJson(req.body(), Stream.class);
-			return streamService.registerStream(temp.getLabel(),
+				Stream temp = g.fromJson(req.body(), Stream.class);
+				return streamService.registerStream(temp.getLabel(),
 					temp.getUnit(),req.queryParams("key"));	
 			}
 			catch(Exception e) {
+				res.status(400);
 				return new String("{\"status\":\"Operação não foi realizada com sucesso. Problema com parâmetros passados.\"}");
 			}
 		});

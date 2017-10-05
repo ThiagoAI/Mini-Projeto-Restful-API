@@ -8,6 +8,7 @@ import java.util.List;
 import org.eclipse.jetty.server.Response;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import sensorsandstreams.Data;
 import sensorsandstreams.Stream;
@@ -28,12 +29,18 @@ public class DataController {
 			Gson g = new Gson();
 			Data temp; 
 			try {
-			temp = g.fromJson(req.body(), Data.class);
-			return dataService.publishData(temp.getTimestamp(),
-					temp.getValue(),req.queryParams("key"));
+				temp = g.fromJson(req.body(), Data.class);
+				JsonObject json = dataService.publishData(temp.getTimestamp(),
+						temp.getValue(),req.queryParams("key"));
+				
+				//Só tem status se ocorreu um erro 
+				if(json.has("status")) res.status(400);
+				
+				return json;
 			}
 			catch(Exception e) {
-			return new String("{\"status\":\"Operação não foi realizada com sucesso. Problema com parâmetros passados.\"}");
+				res.status(400);
+				return new String("{\"status\":\"Operação não foi realizada com sucesso. Problema com parâmetros passados.\"}");
 			}
 		});
 	}
