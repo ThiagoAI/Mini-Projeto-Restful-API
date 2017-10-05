@@ -9,6 +9,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -24,8 +29,9 @@ public class StreamService {
 	
 	//Registra no banco de dados uma stream para um sensor (key)
 	/*Recebe label e unit da stream e key do sensor, retorna o json formatted*/
-	public String registerStream(String label,String unit,String sensor) {
+	public JsonObject registerStream(String label,String unit,String sensor) {
 		Stream stream = new Stream(label,unit,sensor);
+		JsonParser parser = new JsonParser();
 		try {
 			//Abrindo mongo
 			MongoClient mongo = new MongoClient("0.0.0.0",27017);
@@ -41,7 +47,7 @@ public class StreamService {
 			//Se sensor não existir, irá retornar um erro
 			if(!cursor.hasNext()) {
 				cursor.close();
-				return new String("{\"status\":\"Operação não foi realizada com sucesso. Sensor não existe.\"}");
+				return (JsonObject) parser.parse(new String("{\"status\":\"Operação não foi realizada com sucesso. Sensor não existe.\"}"));
 			}
 			BasicDBObject s = (BasicDBObject) cursor.next();
 			
@@ -55,12 +61,12 @@ public class StreamService {
 				newid = new ObjectId(unit);
 			}
 			catch(Exception e) {
-				return new String("{\"status\":\"Operação não foi realizada com sucesso. Chave de unidade inválida.\"}");
+				return (JsonObject) parser.parse(new String("{\"status\":\"Operação não foi realizada com sucesso. ID de Unit inválido.\"}"));
 			}
 			
 			query.put("_id", newid);
 			cursor = units.find(query);
-			if(!cursor.hasNext()) return new String("{\"status\":\"Operação não foi realizada com sucesso. Unidade não existe.\"}");
+			if(!cursor.hasNext()) return (JsonObject) parser.parse(new String("{\"status\":\"Operação não foi realizada com sucesso. Unit não existe.\"}"));
 			
 			//Já que o sensor e a unit existem, criamos e inserimos a stream
 			BasicDBObject newobj = new BasicDBObject();
@@ -72,25 +78,18 @@ public class StreamService {
 			newobj.put("sensor",s.get("_id").toString());
 			newobj.put("totalSize",0);
 			table.insert(newobj);
-			
-			//Pegamos a stream inserida para atualizar a lista com o oid
-			//assim como enviar uma resposta formata posteriormente
-			query = new BasicDBObject();
-			query.put("key", stream.getKey());
-			cursor = table.find(query);
-			BasicDBObject streamDB = (BasicDBObject)cursor.next();
 		
 			List<ObjectId> streams;
 			
 			//Se já tiver sido criado alguma stream, entra no if
 			if(s.containsField("streams")){
 				streams = (List<ObjectId>)s.get("streams");
-				streams.add((ObjectId) streamDB.get("_id"));
+				streams.add((ObjectId) newobj.get("_id"));
 			}
 			else {
 				//Cria lista e adiciona key da stream nova
 				streams = new ArrayList<ObjectId>();
-				streams.add((ObjectId) streamDB.get("_id"));
+				streams.add((ObjectId) newobj.get("_id"));
 			}
 			
 			//Atualiza o campo "streams" do sensor
@@ -98,31 +97,31 @@ public class StreamService {
 			update.append("$set", new BasicDBObject().append("streams",streams));
 			sensors.update(query, update);
 			
-			//Criamos a resposta formatada usando a stream do banco
-			BasicDBObject formatted = new BasicDBObject();
-			
-			formatted.put("oid",streamDB.get("_id").toString());
-			formatted.put("key", streamDB.get("key"));
-			formatted.put("label", streamDB.get("label"));
-			formatted.put("unit", streamDB.get("unit"));
-			formatted.put("sensor", streamDB.get("sensor"));
-			formatted.put("totalSize", streamDB.get("totalSize"));
-			
+			//Criamos a resposta formatada
+			JsonObject formatted = new JsonObject();
+			formatted.addProperty("oid",newobj.get("_id").toString());
+			formatted.addProperty("key", (String)newobj.get("key"));
+			formatted.addProperty("label", (String)newobj.get("label"));
+			formatted.addProperty("unit", (String)newobj.get("unit"));
+			formatted.addProperty("sensor", (String)newobj.get("sensor"));
+			formatted.addProperty("totalSize", (Number)newobj.get("totalSize"));
+	
 			cursor.close();
 			
-			return JsonUtil.toJson(formatted);
+			return formatted;
 		}
 		catch(Exception e){
 			e.printStackTrace();
 		}
 		
-		return new String("{\"status\":\"Operação não foi realizada com sucesso.\"}");
+		return (JsonObject) parser.parse(new String("{\"status\":\"Operação não foi realizada com sucesso.\"}"));
 	}
 	
 	//Pega os dados de uma stream específica
 	/*Recebe chave da stream, retorna a stream com seus dados como json*/
-	public String getSpecificStream(String key) {
-		
+	public JsonObject getSpecificStream(String key) {
+		JsonParser parser = new JsonParser();
+		Gson g = new Gson();
 		try {
 			//Abrindo mongo
 			MongoClient mongo = new MongoClient("0.0.0.0",27017);
@@ -137,20 +136,21 @@ public class StreamService {
 			//Se stream não existir, irá retornar um erro
 			if(!cursor.hasNext()) {
 				cursor.close();
-				return new String("{\"status\":\"Operação não foi realizada com sucesso. Stream não registrada.\"}");
+				return (JsonObject) parser.parse(new String("{\"status\":\"Operação não foi realizada com sucesso. Stream não registrada.\"}"));
 			}
 			
 			//Pegamos a stream, começamos a construir a resposta
 			BasicDBObject s = (BasicDBObject) cursor.next();
-			BasicDBObject formatted = new BasicDBObject();
+			
+			JsonObject formatted = new JsonObject();
 			
 			//Inserimos os valores na resposta
-			formatted.put("oid",s.get("_id").toString());
-			formatted.put("key",s.get("key"));
-			formatted.put("label",s.get("label"));
-			formatted.put("unit",s.get("unit"));
-			formatted.put("sensor",s.get("sensor"));
-			formatted.put("totalSize",s.get("totalSize"));
+			formatted.addProperty("oid",s.get("_id").toString());
+			formatted.addProperty("key",(String)s.get("key"));
+			formatted.addProperty("label",(String)s.get("label"));
+			formatted.addProperty("unit",(String)s.get("unit"));
+			formatted.addProperty("sensor",(String)s.get("sensor"));
+			formatted.addProperty("totalSize",(Number)s.get("totalSize"));
 
 			//Para inserir as datas, transformamos em uma lista de ids
 			BasicDBList listBson = (BasicDBList) s.get("data");
@@ -161,20 +161,20 @@ public class StreamService {
 				for(Object id: listBson) list.add((ObjectId)id);
 				//Chamamos função auxiliar para pegar lista de datas
 				List<BasicDBObject> formattedData = DataService.getData(list,mongo);
-				formatted.append("data", formattedData);
+				formatted.add("data", (JsonArray) parser.parse(g.toJson(formattedData)));
 			}
-			else formatted.append("data", new ArrayList<>());
-			
+			else formatted.add("data", (JsonElement)new JsonArray());
+		
 			cursor.close();
 			
-			return JsonUtil.toJson(formatted);
+			return formatted;
 		}
 		catch(Exception e){
 			e.printStackTrace();
 		
 		}
 		
-		return new String("{\"status\":\"Operação não foi realizada com sucesso.\"}");
+		return (JsonObject) parser.parse(new String("{\"status\":\"Operação não foi realizada com sucesso.\"}"));
 	}
 	
 	//Função auxiliar, envia BasicDBObject da stream pedida e retorna 5 datas mais recentes
