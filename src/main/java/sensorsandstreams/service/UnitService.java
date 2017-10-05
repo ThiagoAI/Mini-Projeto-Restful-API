@@ -3,6 +3,9 @@ package sensorsandstreams.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -16,8 +19,8 @@ public class UnitService {
 	
 	//Pega todas as unidades diferentes do banco
 	/*Não tem entrada e retorna o json para impressão*/
-	public String getUnits(){
-		
+	public JsonArray getUnits(){
+		JsonParser parser = new JsonParser();
 		try {
 			//Abrindo mongo
 			MongoClient mongo = new MongoClient("0.0.0.0",27017);
@@ -26,24 +29,26 @@ public class UnitService {
 			
 			//Colocamos todas as unidades na lista de retorno
 			DBCursor cursor = table.find();
-			List<BasicDBObject> units = new ArrayList<BasicDBObject>();
+			
+			//Criamos o Json de retorno iterando pelo cursor
+			JsonArray units = new JsonArray();
 			while(cursor.hasNext()) {
 				BasicDBObject temp = (BasicDBObject)cursor.next();
-				BasicDBObject formatted = new BasicDBObject();
-				formatted.put("oid",temp.get("_id").toString());
-				formatted.put("label",temp.get("label"));
+				JsonObject formatted = new JsonObject();
+				formatted.addProperty("oid",temp.get("_id").toString());
+				formatted.addProperty("label",(String) temp.get("label"));
 				units.add(formatted);
 			}
 			
 			cursor.close();
 			
-			return JsonUtil.toJson(units);
+			return units;
 		}
 		catch(Exception e){
 			e.printStackTrace();
 		}
 		
-		return new String("{\"status\":\"Operação não foi realizada com sucesso.\"}");
+		return (JsonArray) parser.parse(new String("{\"status\":\"Operação não foi realizada com sucesso.\"}"));
 	}
 
 }
