@@ -1,9 +1,6 @@
 package sensorsandstreams.controller;
 
 import static spark.Spark.*;
-import static jsontransformer.JsonUtil.*;
-
-import java.util.List;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

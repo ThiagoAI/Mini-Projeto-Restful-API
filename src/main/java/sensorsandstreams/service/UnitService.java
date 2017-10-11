@@ -12,7 +12,6 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
 
-import jsontransformer.JsonUtil;
 import sensorsandstreams.Unit;
 
 public class UnitService {

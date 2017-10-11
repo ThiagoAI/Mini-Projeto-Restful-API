@@ -4,7 +4,6 @@ public class Unit {
 	//Nome da medida
 	String label;
 	
-	//Builder
 	public Unit(String label) {
 		this.label = label;
 	}

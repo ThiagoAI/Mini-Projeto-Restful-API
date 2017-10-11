@@ -6,8 +6,6 @@ import java.util.UUID;
 
 import org.bson.types.ObjectId;
 
-import jsontransformer.JsonUtil;
-
 public class Sensor {
 	//Chave gerada interna
 	String key;

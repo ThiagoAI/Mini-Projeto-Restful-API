@@ -17,7 +17,6 @@ import com.mongodb.MongoClient;
 
 import org.bson.types.ObjectId;
 
-import jsontransformer.JsonUtil;
 import sensorsandstreams.Data;
 import sensorsandstreams.Stream;
 

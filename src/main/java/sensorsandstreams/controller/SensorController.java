@@ -10,8 +10,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import static jsontransformer.JsonUtil.*;
-
 import sensorsandstreams.Sensor;
 import sensorsandstreams.service.SensorService;
 

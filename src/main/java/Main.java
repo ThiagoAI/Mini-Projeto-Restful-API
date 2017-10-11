@@ -2,8 +2,6 @@
  *  Autor: Thiago Anders Imhoff
  *  
  *  VER README.md PARA DOCUMENTAÇÃO !!!
- *  
- *  Ao final da main, documentação mais simples.
  */
 
 import static spark.Spark.*;

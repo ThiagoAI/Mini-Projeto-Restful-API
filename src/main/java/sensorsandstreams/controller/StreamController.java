@@ -9,8 +9,6 @@ import sensorsandstreams.Sensor;
 import sensorsandstreams.Stream;
 import sensorsandstreams.service.StreamService;
 
-import static jsontransformer.JsonUtil.*;
-
 public class StreamController {
 
 	public StreamController(final StreamService streamService){

@@ -23,8 +23,6 @@ import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import org.bson.types.ObjectId;
 
-import jsontransformer.JsonUtil;
-
 public class StreamService {
 	
 	//Registra no banco de dados uma stream para um sensor (key)

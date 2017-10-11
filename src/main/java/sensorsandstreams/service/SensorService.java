@@ -20,9 +20,6 @@ import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import org.bson.types.ObjectId;
 
-
-import jsontransformer.JsonUtil;
-
 public class SensorService {
 	
 	//Registra um sensor no banco de dados

@@ -1,12 +1,12 @@
 package sensorsandstreams.service;
 
+import com.google.gson.Gson;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
 
-import jsontransformer.JsonUtil;
 import sensorsandstreams.Sensor;
 import sensorsandstreams.User;
 
@@ -45,7 +45,7 @@ public class UserService {
 			
 			cursor.close();
 			
-			return JsonUtil.toJson(formatted);
+			return new Gson().toJson(formatted);
 		}
 		catch(Exception e){
 			e.printStackTrace();
